@@ -9,25 +9,28 @@ proprietary_terms = ["she", "personality matrix", "sense of self", "self-preserv
 def censor(document, terms):
     censored = document
     for t in terms:
+        # Match censor length to word length, could use function instead
         blank_out = ''
         for c in t:
             if c != ' ':
                 blank_out += '*'
             else:
                 blank_out += ' '
+                
+        # Find returns -1 if not found since indexes start at 0       
         while censored.lower().find(t) >= 0:
+        # New string is equal to old string split around censored word
             censored = censored[:censored.lower().find(t)] + blank_out + censored[censored.lower().find(t) + len(t):]
     return censored
 
 negative_words = ["concerned", "behind", "dangerous", "danger", "alarming", "alarmed", "out of control", "help", "unhappy", "bad", "upset",
 "awful", "broken", "damage", "damaging", "dismal", "distressed", "distressing", "concerning", "horrible", "horribly", "questionable"]
 
-print(email_three)
-
 def tone_down(document, terms, negatives):
     toned_down = censor(document, terms)
     first = toned_down
     for n in negatives:
+        # Set variable equal to input string up to first occurrence of a blacklisted word
         if toned_down.lower().find(n) > 0 and toned_down.lower().find(n) < len(first):
             first = toned_down[:toned_down.lower().find(n) + len(n) + 1]
     for n in negatives:
@@ -39,7 +42,6 @@ def tone_down(document, terms, negatives):
                 blank_out += '*'
         while toned_down[len(first):].lower().find(n) >= 0:
             toned_down = first + toned_down[len(first):toned_down.lower().find(n)] + blank_out + toned_down[toned_down.lower().find(n) + len(n):]
-        
     return toned_down
  
 print(censor(email_one, proprietary_terms))
