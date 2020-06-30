@@ -6,25 +6,29 @@ email_four = open("email_four.txt", "r").read()
 
 proprietary_terms = ["she", "personality matrix", "sense of self", "self-preservation", "learning algorithm", "herself", "her"]
 
+negative_words = ["concerned", "behind", "dangerous", "danger", "alarming", "alarmed", "alarmingly", "out of control", "help", "unhappy", "bad", "upset",
+"awful", "broken", "damage", "damaging", "dismal", "distressed", "distressing", "concerning", "horrible", "horribly", "questionable"]
+
+# Match censor length to original word length
+def blank_out(word):
+    blank = ''
+    for c in word:
+        if c != ' ':
+            blank += '*'
+        else:
+            blank += ' '
+    return blank
+
 def censor(document, terms):
     censored = document
     for t in terms:
-        # Match censor length to word length, could use function instead
-        blank_out = ''
-        for c in t:
-            if c != ' ':
-                blank_out += '*'
-            else:
-                blank_out += ' '
-                
         # Find returns -1 if not found since indexes start at 0       
         while censored.lower().find(t) >= 0:
-        # New string is equal to old string split around censored word
-            censored = censored[:censored.lower().find(t)] + blank_out + censored[censored.lower().find(t) + len(t):]
+            blank = blank_out(t)
+            # New string is equal to old string split around censored word
+            censored = censored[:censored.lower().find(t)] + blank + censored[censored.lower().find(t) + len(t):]
     return censored
 
-negative_words = ["concerned", "behind", "dangerous", "danger", "alarming", "alarmed", "out of control", "help", "unhappy", "bad", "upset",
-"awful", "broken", "damage", "damaging", "dismal", "distressed", "distressing", "concerning", "horrible", "horribly", "questionable"]
 
 def tone_down(document, terms, negatives):
     toned_down = censor(document, terms)
@@ -34,16 +38,47 @@ def tone_down(document, terms, negatives):
         if toned_down.lower().find(n) > 0 and toned_down.lower().find(n) < len(first):
             first = toned_down[:toned_down.lower().find(n) + len(n) + 1]
     for n in negatives:
-        blank_out = ''
-        for c in n:
-            if c == ' ':
-                blank_out += c
-            else:
-                blank_out += '*'
         while toned_down[len(first):].lower().find(n) >= 0:
-            toned_down = first + toned_down[len(first):toned_down.lower().find(n)] + blank_out + toned_down[toned_down.lower().find(n) + len(n):]
+            blank = blank_out(n)
+            toned_down = first + toned_down[len(first):toned_down.lower().find(n)] + blank + toned_down[toned_down.lower().find(n) + len(n):]
     return toned_down
- 
-print(censor(email_one, proprietary_terms))
+
+
+def super_censor(document, terms, negatives, extra):
+    # Checking and editing a list is much easier. Leaving split() blank removed newlines "\n" as well as spaces.
+    super_censored = document.split(' ')    
+    
+    for w in super_censored:
+        index = super_censored.index(w)
+        
+        for t in terms:
+            # Split the bad term into individual words otherwise multi-word terms don't get caught
+            for p in t.split():
+                # If the word isn't part of a blacklisted term we don't need to change the list entry and can end the loop
+                if w.lower() != p:
+                    break
+                else:
+                    super_censored[index] = blank_out(w)
+                    
+                    # Added a customisable amount of surrounding words to remove
+                    for r in range(extra):                    
+                        super_censored[index - extra ] = blank_out(super_censored[index - extra ])
+                        super_censored[index + extra ] = blank_out(super_censored[index + extra ])
+        
+        for n in negatives:
+            for p in n.split():
+                if w.lower() != n:
+                    break
+                else:
+                    super_censored[index] = blank_out(n)
+                    
+                    for r in range(extra):                    
+                        super_censored[index - extra ] = blank_out(super_censored[index - extra ])
+                        super_censored[index + extra ] = blank_out(super_censored[index + extra ])
+    # Combines all elements in list with a space in-between
+    return ' '.join(super_censored)
+             
+print(email_one.replace("learning algorithm", '*****'))
 print(censor(email_two, proprietary_terms))
 print(tone_down(email_three, proprietary_terms, negative_words))
+print(super_censor(email_four, proprietary_terms, negative_words, 1))
