@@ -9,14 +9,21 @@ proprietary_terms = ["she", "personality matrix", "sense of self", "self-preserv
 negative_words = ["concerned", "behind", "dangerous", "danger", "alarming", "alarmed", "alarmingly", "out of control", "help", "unhappy", "bad", "upset",
 "awful", "broken", "damage", "damaging", "dismal", "distressed", "distressing", "concerning", "horrible", "horribly", "questionable"]
 
-# Match censor length to original word length
+punctuation = [",", "!", "?", ".", "%", "/", "(", ")", " "]
+
+# Match censor length to original word length and check for punctuation
 def blank_out(word):
     blank = ''
+    b = ''
     for c in word:
-        if c != ' ':
-            blank += '*'
-        else:
-            blank += ' '
+        for p in punctuation:
+            if c == p:
+                b = c
+                break
+            else:
+                b = '*'
+        blank += b
+    
     return blank
 
 def censor(document, terms):
@@ -48,17 +55,18 @@ def super_censor(document, terms, negatives, extra):
     # Checking and editing a list is much easier. Leaving split() blank removed newlines "\n" as well as spaces.
     super_censored = document.split(' ')    
     
-    for w in super_censored:
-        index = super_censored.index(w)
+    for c in super_censored:
+        index = super_censored.index(c)
+        w = c.strip(''.join(punctuation)).lower()
         
         for t in terms:
             # Split the bad term into individual words otherwise multi-word terms don't get caught
             for p in t.split():
                 # If the word isn't part of a blacklisted term we don't need to change the list entry and can end the loop
-                if w.lower() != p:
+                if w != p:
                     break
                 else:
-                    super_censored[index] = blank_out(w)
+                    super_censored[index] = blank_out(c)
                     
                     # Added a customisable amount of surrounding words to remove
                     for r in range(extra):                    
@@ -67,10 +75,10 @@ def super_censor(document, terms, negatives, extra):
         
         for n in negatives:
             for p in n.split():
-                if w.lower() != n:
+                if w != n:
                     break
                 else:
-                    super_censored[index] = blank_out(n)
+                    super_censored[index] = blank_out(c)
                     
                     for r in range(extra):                    
                         super_censored[index - extra ] = blank_out(super_censored[index - extra ])
